@@ -3,5 +3,8 @@
 """
 from django.shortcuts import render
 
+from web.forms.account import RegisterForm
+
 def register(request):
-    return render(request, 'register.html')
+    form = RegisterForm()
+    return render(request, 'register.html',context={'form':form})
