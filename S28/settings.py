@@ -105,7 +105,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'zh-hans'
 
 TIME_ZONE = 'UTC'
 
@@ -129,12 +130,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #腾讯云短信应用的app_id
 TECENT_SMS_APP_ID = 666666666
 #腾讯云短信应用的app_key
-TECENT_SMS_APP_KEY = '666666666666666666666'
+TENCENT_SMS_APP_KEY = '666666666666666666666'
 
 #腾讯云短信签名内容
-TECENT_SMS_SIGN = 'Python之路'
+TENCENT_SMS_SIGN = 'Python之路'
 
-TECENT_SMS_TEMPLATES = {
+TENCENT_SMS_TEMPLATES = {
     'register':548760,
     'login':548762,
 }
