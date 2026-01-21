@@ -9,8 +9,8 @@ from django.conf import settings
 
 def send_sms(request):
     """发送短信（注册和登录模板id不一样）
-        ?tpl=login  ->548762
-        ?tpl=register  ->548760
+        ?tpl=login  ->2589479
+        ?tpl=register  ->2589477
     """
     tpl = request.GET.get('tpl')
     template_id = settings.TECENT_SMS_TEMPLATES.get(tpl)

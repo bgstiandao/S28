@@ -128,16 +128,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ####### sms #######
 
 #腾讯云短信应用的app_id
-TECENT_SMS_APP_ID = 666666666
+TENCENT_SMS_APP_ID = 666666666
 #腾讯云短信应用的app_key
 TENCENT_SMS_APP_KEY = '666666666666666666666'
-
 #腾讯云短信签名内容
-TENCENT_SMS_SIGN = 'Python之路'
+TENCENT_SMS_SIGN = '66666'
 
+#腾讯云短信模板id
 TENCENT_SMS_TEMPLATES = {
-    'register':548760,
-    'login':548762,
+    'register':2589477,
+    'login':2589479,
+    'rest':2589481,
 }
 
 try:
