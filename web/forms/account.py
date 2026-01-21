@@ -53,6 +53,7 @@ class RegisterForm(forms.ModelForm):
         exist = models.UserInfo.objects.filter(username=username).exists()
         if exist:
             raise ValidationError('用户名已存在')
+            #self.add_error('username','用户名已存在') #用这种方式可以保证clean_data始终有username这个key
         return username
 
     def clean_email(self):
@@ -67,7 +68,7 @@ class RegisterForm(forms.ModelForm):
         return encrypt.md5(password)
 
     def clean_confirm_password(self):   #优先级顺序
-        password = self.cleaned_data['password']
+        password = self.cleaned_data.get('password')
         confirm_password = encrypt.md5(self.cleaned_data['confirm_password'])
         if password != confirm_password:
             raise ValidationError('两次密码不一致')
@@ -82,7 +83,12 @@ class RegisterForm(forms.ModelForm):
 
     def clean_code(self):
         code = self.cleaned_data['code']
-        mobile_phone = self.cleaned_data['mobile_phone']
+
+        # mobile_phone = self.cleaned_data['mobile_phone']
+        #修复可能出现没有mobile_phone的bug（手机号已注册，前面的clean_data里面就没有mobile_phone这个key）
+        mobile_phone = self.cleaned_data.get('mobile_phone')
+        if not mobile_phone:
+            return code
 
         conn = get_redis_connection('default')
         redis_code = conn.get(mobile_phone)
