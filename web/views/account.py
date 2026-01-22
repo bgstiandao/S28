@@ -1,10 +1,12 @@
 """
 用户账户相关功能：注册，短信，登录，注销
 """
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import render,HttpResponse
 
-from web.forms.account import RegisterForm,SendSmsForm
+from web.forms.account import RegisterForm, SendSmsForm, LoginForm
+
 
 def register(request):
     """注册"""
@@ -30,4 +32,23 @@ def send_sms(request):
     #只是校验手机号：不能为空、格式是否正确
     if form.is_valid():
         return JsonResponse({'status': True})
+    return JsonResponse({'status': False,'error': form.errors})
+
+
+def login_sms(request):
+    """短信登录"""
+    if request.method == "GET":
+        form = LoginForm()
+        return render(request,'login_sms.html',{'form':form})
+    form = LoginForm(request.POST)
+    if form.is_valid():
+        #输入正确，登录成功
+        user_object = form.cleaned_data['mobile_phone']     #这样可以直接获取用户对象，少做一次查询
+        #models.UserInfo.objects.filter(mobile_phone=form.cleaned_data['mobile_phone']).first()，相当于少做了一次这个数据库查询
+
+        #用户信息放入session中
+        request.session['user_id'] = user_object.id
+        request.session['user_name'] = user_object.username
+
+        return JsonResponse({'status': True,'data':'/index/'})
     return JsonResponse({'status': False,'error': form.errors})
