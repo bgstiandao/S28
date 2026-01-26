@@ -140,7 +140,7 @@ class SendSmsForm(forms.Form):
         return mobile_phone
 
 
-class LoginForm(BootstrapForm,forms.Form):
+class LoginSmsForm(BootstrapForm,forms.Form):
     mobile_phone = forms.CharField(
         label='手机号',
         validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$', '手机号格式错误'),]
@@ -169,6 +169,36 @@ class LoginForm(BootstrapForm,forms.Form):
         redis_str_code = redis_code.decode('utf-8')
         if code.strip() != redis_str_code:
             raise ValidationError('验证码错误，请重新输入')
+        return code
+
+
+class LoginForm(BootstrapForm,forms.Form):
+    username = forms.CharField(label='邮箱或手机号')
+    password = forms.CharField(label='密码',widget=forms.PasswordInput(render_value=True))    #render_value=True页面上可以保存输错的密码
+    code = forms.CharField(label='图片验证码')
+
+    def __init__(self,request,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.request = request
+
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        # 加密&返回
+        return encrypt.md5(password)
+
+    def clean_code(self):
+        """钩子 图片验证码是否正确"""
+        #读取用户输入的验证码
+        code = self.cleaned_data['code']
+
+        #去session获取自己的验证码
+        session_code = self.request.session.get('image_code')
+        if not session_code:
+            raise ValidationError('验证码已过期，请重新获取')
+
+        if code.strip().upper() != session_code.strip().upper():
+            raise ValidationError("验证码输入错误")
+
         return code
 
 
