@@ -97,3 +97,8 @@ def image_code(request):
     # stream.getvalue()   #把图片从内存中取出
 
     return HttpResponse(stream.getvalue())
+
+def logout(request):
+    """退出登录"""
+    request.session.flush()
+    return redirect('index')
