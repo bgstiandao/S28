@@ -1,6 +1,6 @@
 
 from django.urls import path,include
-from web.views import account,home
+from web.views import account,home,project
 
 urlpatterns = [
     path('register/', account.register, name='register'),   #'register'
@@ -11,5 +11,8 @@ urlpatterns = [
     path('logout/', account.logout, name='logout'),
     path('index/', home.index, name='index'),
 
+
+    #项目管理
+    path(r'^project/list$', project.project_list, name='project_list'),
 
 ]

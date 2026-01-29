@@ -1,6 +1,8 @@
 """
 用户账户相关功能：注册，短信，登录，注销
 """
+import uuid
+import datetime
 from io import BytesIO
 
 from django.http import JsonResponse
@@ -20,7 +22,26 @@ def register(request):
     if form.is_valid():
         # 验证通过，写入数据库（密码要是密文）
         # instance = form.save()      #刚刚写入的那条数据
-        form.save()
+        #form.save()    #保存到数据库
+
+        #用户表中新建一条数据（注册）
+        instance = form.save()
+
+        # 创建交易记录
+        #方式一，（中间件中的获取当前用户的额度，需要创建免费版的交易记录）
+        policy_object = models.PricePolicy.objects.filter(category=1,title='个人免费版').first()
+        models.Transaction.objects.create(
+            status = 2,
+            order = str(uuid.uuid4()),   #随机字符串
+            user = instance,
+            price_policy=policy_object,
+            count = 0,
+            price = 0,
+            start_datetime=datetime.datetime.now(),
+        )
+
+        #方式二（什么都不写）
+
         return JsonResponse({'status':True,'data':'/login/'})
 
     return JsonResponse({'status':False,'error':form.errors})

@@ -142,6 +142,18 @@ TENCENT_SMS_TEMPLATES = {
     'rest':2589481,
 }
 
+
+# ############# 登录白名单：无需登录就可以访问的页面 #############
+WHITE_REGEX_URL_LIST = [
+    '/register/',
+    '/login/sms/',
+    '/login/',
+    '/image/code',
+    '/send/sms/',
+    '/index/',
+]
+
+
 try:
     from .local_settings import *
 except ImportError:
