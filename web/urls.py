@@ -1,5 +1,5 @@
 
-from django.urls import path,include
+from django.urls import path,re_path,include
 from web.views import account,home,project
 
 urlpatterns = [
@@ -13,6 +13,11 @@ urlpatterns = [
 
 
     #项目管理
-    path(r'^project/list$', project.project_list, name='project_list'),
+    re_path(r'^project/list/$', project.project_list, name='project_list'),  #re_path用于正则表达式的url路径
+
+    #/project/star/my/1
+    #/project/star/join/1
+    re_path(r'^project/star/(?P<project_type>\w+)/(?P<project_id>\d+)/$', project.project_star, name='project_star'),
+    re_path(r'^project/unstar/(?P<project_type>\w+)/(?P<project_id>\d+)/$', project.project_unstar, name='project_unstar'),
 
 ]
