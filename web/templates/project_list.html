@@ -83,13 +83,14 @@
 
 {% block content %}
     <div class="container-fluid project">
+        <!-- 新建项目按钮 -->
         <div style="margin: 10px 0;">
             <a class="btn btn-primary" data-toggle="modal" data-target="#addModal">
                 <i class="fa fa-plus-square" aria-hidden="true"></i> 新建项目
             </a>
         </div>
 
-
+        <!-- 星标项目展示面板 -->
         <div class="panel panel-default">
             <div class="panel-heading">
                 <span class="glyphicon glyphicon-star" aria-hidden="true"></span> 星标
@@ -97,7 +98,7 @@
             <div class="panel-body">
                 {% for item in project_dict.star %}
                     <div class="item">
-                        <a href="#" class="title"
+                        <a href="{% url 'dashboard' project_id=item.value.id %}" class="title"
                            style="background-color: {{ item.value.get_color_display }};">{{ item.value.name }}</a>
                         <div class="info">
                             <div>
@@ -119,7 +120,7 @@
 
             </div>
         </div>
-
+        <!-- 创建项目展示面板 -->
         <div class="panel panel-default">
             <div class="panel-heading">
                 <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> 我创建的
@@ -127,7 +128,7 @@
             <div class="panel-body">
                 {% for item in project_dict.my %}
                     <div class="item">
-                        <a href="#" class="title"
+                        <a href="{% url 'dashboard' project_id=item.id %}" class="title"
                            style="background-color: {{ item.get_color_display }};">{{ item.name }}</a>
                         <div class="info">
                             <div>
@@ -149,7 +150,7 @@
 
             </div>
         </div>
-
+        <!-- 参与项目展示面板 -->
         <div class="panel panel-default">
             <div class="panel-heading">
                 <i class="fa fa-handshake-o" aria-hidden="true"></i> 我参与的
@@ -157,7 +158,7 @@
             <div class="panel-body">
                 {% for item in project_dict.join %}
                     <div class="item">
-                        <a href="#" class="title"
+                        <a href="{% url 'dashboard' project_id=item.id %}" class="title"
                            style="background-color: {{ item.get_color_display }};">{{ item.name }}</a>
                         <div class="info">
                             <div>
