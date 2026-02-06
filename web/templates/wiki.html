@@ -1,22 +1,137 @@
-{% extends 'layout/manage.html'%}
+{% extends 'layout/manage.html' %}
 
 {% block title %}
 
 {% endblock %}
 
 {% block css %}
+    <style>
+        .panel-default {
+            margin-top: 10px;
+        }
 
+        .panel-default .panel-heading {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
+        .panel-body {
+            padding: 0;
+        }
+
+        .title-list {
+            border-right: 1px solid #dddddd;
+            min-height: 500px;
+        }
+
+        .title-list ul {
+            padding-left: 15px;
+        }
+
+        .title-list ul a {
+            display: block;
+            padding: 5px 0;
+        }
+
+        .content {
+            border-left: 1px solid #dddddd;
+            min-height: 600px;
+            margin-left: -1px;
+        }
+
+    </style>
 {% endblock %}
 
 
 
 {% block content %}
-	<h1>文档</h1>
+    <div class="container-fluid">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div>
+                    <i class="fa fa-book" aria-hidden="true"></i> wiki文档
+                </div>
+
+                <div class="function">
+                    <a type="button" class="btn btn-success btn-xs"
+                       href="/manage/{{ request.tracer.project.id }}/wiki/add/">
+                        <i class="fa fa-plus-circle" aria-hidden="true"></i> 新建
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="col-sm-3 title-list">
+                    <ul id="catalog">
+
+                    </ul>
+
+                </div>
+
+                <div class="col-xs-9 content">
+                    {% if wiki_object %}
+                        {{ wiki_object.content }}
+                    {% else %}
+                        <div style="text-align: center;margin-top: 50px">
+                            <h4>《{{ request.tracer.project.name }}》wiki文档库</h4>
+                            <a href="{% url 'wiki_add' project_id=request.tracer.project.id %}">
+                                <i class="fa fa-plus-circle" aria-hidden="true"></i>新建文章
+                            </a>
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
 {% endblock %}
 
 
 
 
 {% block js %}
+    <script>
 
+        //http://127.0.0.1:8000/manage/2/wiki/
+        var WIKI_DETAIL_URL = "{% url 'wiki' project_id=request.tracer.project.id %}"
+
+        $(function () {
+            initCatalog();
+        });
+
+        function initCatalog() {
+            $.ajax({
+                url: "{% url 'wiki_catalog' project_id=request.tracer.project.id %}",
+                type: "GET",
+                dataType: "JSON",
+                success: function (res) {
+                    if (res.status) {
+                        $.each(res.data, function (index, item) {
+                            //item=[1, '王元', null]、 [2, '尹立生', null]
+                            //item[0],item[1],item[2]
+                            //item={id:1, title:'王元',parent_id:null}、 {id:2, title:'尹立生', parent_id:null}
+                            //item.id  item.title  item.parent_id
+
+                            var href = WIKI_DETAIL_URL + "?wiki_id=" + item.id
+                            var li = $("<li>").attr('id', 'id_' + item.id).append($("<a>").text(item.title).attr('href', href)).append($("<ul>"));
+                            if (!item.parent_id) {
+                                //<li id='xx'><a href="">目录2</a></li>
+                                //添加到catalog中
+                                $("#catalog").append(li);
+                            } else {
+                                $("#id_" + item.parent_id).children('ul').append(li);
+                            }
+
+
+                        });
+                    } else {
+                        alert('初始化目录失败');
+                    }
+                }
+            })
+        }
+
+    </script>
 {% endblock %}
