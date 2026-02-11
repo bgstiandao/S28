@@ -32,6 +32,9 @@ urlpatterns = [
 
         # re_path(r'^wiki/detail/$', wiki.wiki_detail, name='wiki_detail'),不需要多写一个url，直接用wiki那个后面加参数
 
+        re_path(r'^wiki/delete/(?P<wiki_id>\d+)/$',wiki.wiki_delete, name='wiki_delete'),
+
+        re_path(r'^wiki/edit/(?P<wiki_id>\d+)/$', wiki.wiki_edit, name='wiki_edit'),
 
         re_path(r'^setting/$',manage.setting, name='setting'),
 

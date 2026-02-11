@@ -1,10 +1,11 @@
 {% extends 'layout/manage.html' %}
-
+{% load static %}
 {% block title %}
 
 {% endblock %}
 
 {% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.preview.min.css' %}">
     <style>
         .panel-default {
             margin-top: 10px;
@@ -58,6 +59,19 @@
                        href="/manage/{{ request.tracer.project.id }}/wiki/add/">
                         <i class="fa fa-plus-circle" aria-hidden="true"></i> 新建
                     </a>
+                    {% if wiki_object %}
+                        <a type="button" class="btn btn-primary btn-xs"
+                           href="{% url 'wiki_edit' project_id=request.tracer.project.id wiki_id=wiki_object.id %}">
+                            <i class="fa fa-edit" aria-hidden="true"></i> 编辑
+                        </a>
+
+                        <a type="button" class="btn btn-danger btn-xs"
+                           href="{% url 'wiki_delete' project_id=request.tracer.project.id wiki_id=wiki_object.id %}">
+                            <i class="fa fa-trash" aria-hidden="true"></i> 删除
+                        </a>
+                    {% endif %}
+
+
                 </div>
             </div>
             <div class="panel-body">
@@ -70,7 +84,10 @@
 
                 <div class="col-xs-9 content">
                     {% if wiki_object %}
-                        {{ wiki_object.content }}
+                        <div id="previewMarkdown">
+                            <textarea>{{ wiki_object.content }}</textarea>
+                        </div>
+
                     {% else %}
                         <div style="text-align: center;margin-top: 50px">
                             <h4>《{{ request.tracer.project.name }}》wiki文档库</h4>
@@ -92,14 +109,34 @@
 
 
 {% block js %}
+    <script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/marked.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/prettify.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/raphael.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/underscore.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/sequence-diagram.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/flowchart.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/jquery.flowchart.min.js' %}"></script>
+
     <script>
 
         //http://127.0.0.1:8000/manage/2/wiki/
         var WIKI_DETAIL_URL = "{% url 'wiki' project_id=request.tracer.project.id %}"
 
         $(function () {
+
             initCatalog();
+
+            initPreviewEditMd();
         });
+
+        //markdown预览
+        function initPreviewEditMd(){
+            editormd.markdownToHTML('previewMarkdown',{
+                htmlDecode: 'style,script,iframe'
+            });
+        }
+
 
         function initCatalog() {
             $.ajax({

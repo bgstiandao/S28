@@ -1,0 +1,168 @@
+{% extends 'layout/manage.html' %}
+{% load static %}
+{% block title %}
+
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
+    <style>
+        .panel-default {
+            margin-top: 10px;
+        }
+
+        .panel-default .panel-heading {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
+        .panel-body {
+            padding: 0;
+        }
+
+        .title-list {
+            border-right: 1px solid #dddddd;
+            min-height: 500px;
+        }
+
+        .title-list ul {
+            padding-left: 15px;
+        }
+
+        .title-list ul a {
+            display: block;
+            padding: 5px 0;
+        }
+
+        .content {
+            border-left: 1px solid #dddddd;
+            min-height: 600px;
+            margin-left: -1px;
+        }
+
+        /* markdown全屏样式如果在导航条（默认1000）下面的话，需要加这个样式
+        .editormd-fullscreen{
+            z-index: 1001;
+        }
+        */
+
+    </style>
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div>
+                    <i class="fa fa-book" aria-hidden="true"></i> wiki文档
+                </div>
+
+                <div class="function">
+                    <a type="button" class="btn btn-success btn-xs"
+                       href="/manage/{{ request.tracer.project.id }}/wiki/add/">
+                        <i class="fa fa-plus-circle" aria-hidden="true"></i> 新建
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="col-sm-3 title-list">
+                    <ul id="catalog">
+
+                    </ul>
+
+                </div>
+
+                <div class="col-xs-9 content">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            {% for field in form %}
+                                {% if field.name == 'content' %}
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    <div id="editor">
+                                        {{ field }}
+                                    </div>
+                                    <span class="error-msg">{{ field.errors.0 }}</span>
+                                {% else %}
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    <span class="error-msg">{{ field.errors.0 }}</span>
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+                        <button type="submit" class="btn btn-primary">提 交</button>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}
+
+
+
+
+{% block js %}
+    <script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
+    <script>
+
+        //http://127.0.0.1:8000/manage/2/wiki/
+        var WIKI_DETAIL_URL = "{% url 'wiki' project_id=request.tracer.project.id %}"
+
+        $(function () {
+            initCatalog();
+            initEditMd();
+        });
+
+        /*
+         初始化markdown编辑器（textarea转换为编辑器）
+         */
+        function initEditMd(){
+            editormd('editor',{
+                placeholder:'请输入内容',
+                height:500,
+                path:"{% static 'plugin/editor-md/lib/' %}",   /*内部资源依赖的路径*/
+            })
+        }
+
+        function initCatalog() {
+            $.ajax({
+                url: "{% url 'wiki_catalog' project_id=request.tracer.project.id %}",
+                type: "GET",
+                dataType: "JSON",
+                success: function (res) {
+                    if (res.status) {
+                        $.each(res.data, function (index, item) {
+                            //item=[1, '王元', null]、 [2, '尹立生', null]
+                            //item[0],item[1],item[2]
+                            //item={id:1, title:'王元',parent_id:null}、 {id:2, title:'尹立生', parent_id:null}
+                            //item.id  item.title  item.parent_id
+
+                            var href = WIKI_DETAIL_URL + "?wiki_id=" + item.id
+                            var li = $("<li>").attr('id', 'id_' + item.id).append($("<a>").text(item.title).attr('href', href)).append($("<ul>"));
+                            if (!item.parent_id) {
+                                //<li id='xx'><a href="">目录2</a></li>
+                                //添加到catalog中
+                                $("#catalog").append(li);
+                            } else {
+                                $("#id_" + item.parent_id).children('ul').append(li);
+                            }
+
+
+                        });
+                    } else {
+                        alert('初始化目录失败');
+                    }
+                }
+            })
+        }
+
+    </script>
+{% endblock %}
