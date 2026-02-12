@@ -36,6 +36,8 @@ urlpatterns = [
 
         re_path(r'^wiki/edit/(?P<wiki_id>\d+)/$', wiki.wiki_edit, name='wiki_edit'),
 
+        re_path(r'^wiki/upload/$', wiki.wiki_upload, name='wiki_upload'),
+
         re_path(r'^setting/$',manage.setting, name='setting'),
 
     ])),

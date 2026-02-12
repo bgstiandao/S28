@@ -1,8 +1,13 @@
-from django.http import JsonResponse,HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render,redirect
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+
 from web.forms.wiki import WikiModelForm
 from web import models
+
+from utils.encrypt import uid
+from utils.tecent.cos import upload_file
 
 def wiki(request, project_id):
     """wiki首页"""
@@ -92,3 +97,31 @@ def wiki_edit(request, project_id,wiki_id):
         preview_url = '{0}?wiki_id={1}'.format(url,wiki_id)
         return redirect(preview_url)
     return render(request, 'wiki_form.html', {'form': form})
+
+@csrf_exempt
+def wiki_upload(request, project_id):
+    """markdown插件上传图片"""
+    result = {
+        'success': 0,
+        'message': None,
+        'url': None,
+    }
+
+    image_object = request.FILES.get('editormd-image-file')
+    if not image_object:
+        result['message'] = 500
+        return JsonResponse(result)
+
+    ext = image_object.name.rsplit('.')[-1]
+    key = "{}.{}".format(uid(request.tracer.user.mobile_phone), ext)
+    image_url = upload_file(
+        request.tracer.project.bucket,
+        request.tracer.project.region,
+        image_object,
+        key
+    )
+    print(image_url)
+    result['success'] = 1
+    result['url'] = image_url
+
+    return JsonResponse(result)

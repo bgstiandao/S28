@@ -115,6 +115,7 @@
 
         //http://127.0.0.1:8000/manage/2/wiki/
         var WIKI_DETAIL_URL = "{% url 'wiki' project_id=request.tracer.project.id %}"
+        var WIKI_UPLOAD_URL = "{% url 'wiki_upload' project_id=request.tracer.project.id %}"
 
         $(function () {
             initCatalog();
@@ -129,6 +130,9 @@
                 placeholder:'请输入内容',
                 height:500,
                 path:"{% static 'plugin/editor-md/lib/' %}",   /*内部资源依赖的路径*/
+                imageUpload:true,
+                imageFormats:['jpg','jpeg','png','gif'],
+                imageUploadURL:WIKI_UPLOAD_URL,
             })
         }
 
