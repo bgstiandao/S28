@@ -117,7 +117,7 @@ class FileRepository(models.Model):
     file_size = models.IntegerField(verbose_name='文件大小',null=True,blank=True)
     file_path = models.CharField(verbose_name='文件路径',max_length=255,null=True,blank=True)
 
-    parent = models.ForeignKey(verbose_name='父级目录',to='self',on_delete=models.CASCADE)
+    parent = models.ForeignKey(verbose_name='父级目录',to='self',on_delete=models.CASCADE,null=True,blank=True)
 
-    update_user = models.ForeignKey(verbose_name='最近更新这',to='UserInfo',on_delete=models.CASCADE)
+    update_user = models.ForeignKey(verbose_name='最近更新者',to='UserInfo',on_delete=models.CASCADE)
     update_datetime = models.DateTimeField(verbose_name='更新时间',auto_now=True)

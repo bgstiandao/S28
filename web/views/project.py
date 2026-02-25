@@ -47,6 +47,7 @@ def project_list(request):
         form = ProjectModelForm(request)
         return render(request, 'project_list.html', {'form': form, 'project_dict': project_dict})
 
+    #POST，对话框ajax添加项目
     form = ProjectModelForm(request, data=request.POST)
     if form.is_valid():
         name = form.cleaned_data['name']

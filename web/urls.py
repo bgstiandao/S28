@@ -1,6 +1,6 @@
 
 from django.urls import path,re_path,include
-from web.views import account,home,project,manage,wiki
+from web.views import account,home,project,manage,wiki,file
 
 urlpatterns = [
     path('register/', account.register, name='register'),   #'register'
@@ -25,7 +25,7 @@ urlpatterns = [
         re_path(r'^dashboard/$',manage.dashboard, name='dashboard'),
         re_path(r'^issues/$',manage.issues, name='issues'),
         re_path(r'^statistics/$',manage.statistics, name='statistics'),
-        re_path(r'^file/$',manage.file, name='file'),
+
         re_path(r'^wiki/$',wiki.wiki, name='wiki'),
         re_path(r'^wiki/add/$',wiki.wiki_add, name='wiki_add'),
         re_path(r'^wiki/catalog/$',wiki.wiki_catalog, name='wiki_catalog'),
@@ -37,6 +37,8 @@ urlpatterns = [
         re_path(r'^wiki/edit/(?P<wiki_id>\d+)/$', wiki.wiki_edit, name='wiki_edit'),
 
         re_path(r'^wiki/upload/$', wiki.wiki_upload, name='wiki_upload'),
+
+        re_path(r'^file/$',file.file, name='file'),
 
         re_path(r'^setting/$',manage.setting, name='setting'),
 
