@@ -39,6 +39,7 @@ urlpatterns = [
         re_path(r'^wiki/upload/$', wiki.wiki_upload, name='wiki_upload'),
 
         re_path(r'^file/$',file.file, name='file'),
+        re_path(r'^file/delete/$',file.file_delete, name='file_delete'),
 
         re_path(r'^setting/$',manage.setting, name='setting'),
 
