@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .relative {
+            position: relative;
+            top: 20px; /* 向下移动20px */
+            left: 30px; /* 向右移动30px */
+            background: lightblue;
+        }
+
+        .absolute {
+            position: absolute;
+            top: 10px; /* 相对于父容器顶部10px */
+            right: 10px; /* 相对于父容器右侧10px */
+            background: lightcoral;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="box1">正常块1</div>
+    <div class="box2 relative">我是相对定位</div>
+    <div class="box3">正常块3</div>
+</div>
+
+<div class="container" style="position: relative; height: 150px; background: #eee;">
+    <div class="box1">正常块1</div>
+    <div class="box2 absolute">我是绝对定位</div>
+    <div class="box3">正常块3</div>
+</div>
+
+
+</body>
+</html>
