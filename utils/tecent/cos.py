@@ -49,3 +49,28 @@ def upload_file(bucket, region,file_object,key):
     # https: // pypu - 18309280693 - 1770822331803 - 1392471131. cos.ap - shanghai.myqcloud.com / 5fa46718f14b430f281ede063e256b57.png
 
     return "https://{}.cos.{}.myqcloud.com/{}".format(bucket, region, key)
+
+
+def delete_file(bucket, region,key):
+    config = CosConfig(Region=region,SecretKey=settings.TENCENT_COS_ID, SecretId=settings.TENCENT_COS_KEY)
+    client = CosS3Client(config)
+
+    client.delete_object(
+        Bucket=bucket,
+        Key=key
+    )
+
+
+def delete_file_list(bucket, region,key_list):
+    config = CosConfig(Region=region,SecretKey=settings.TENCENT_COS_ID, SecretId=settings.TENCENT_COS_KEY)
+    client = CosS3Client(config)
+
+    # 批量删除文件
+    objects = {
+        "Quiet": "true",
+        "Object": key_list
+    }
+    client.delete_objects(
+        Bucket=bucket,
+        Delete=objects,
+    )
