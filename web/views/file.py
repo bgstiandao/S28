@@ -1,11 +1,14 @@
+import json
+
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.forms import model_to_dict
+from django.views.decorators.csrf import csrf_exempt
 
 from web.forms.file import FileModelForm
 from web import models
 
-from utils.tecent.cos import delete_file,delete_file_list
+from utils.tecent.cos import delete_file,delete_file_list,credential
 
 # http://127.0.0.1:8000/manage/2/file/
 # http://127.0.0.1:8000/manage/2/file/?folder=9
@@ -123,3 +126,30 @@ def file_delete(request,project_id):
     #删除数据库中的文件
     delete_object.delete()
     return JsonResponse({'status': True})
+
+@csrf_exempt
+def cos_credential(request,project_id):
+    """获取cos上传临时凭证"""
+    #单文件的限制大小 M
+    per_file_limit = request.tracer.price_policy.per_file_size*1024*1024
+    total_file_limit = request.tracer.price_policy.project_space*1024*1024*1024
+    total_size = 0
+    file_list = json.loads(request.body.decode('utf-8'))
+    # 做容量限制：单文件 & 总容量
+    for item in file_list:
+        #文件的字节大小 item["size"] = B
+        #单文件限制的大小 M
+        #超出限制
+        print(item['size'])
+        if item['size'] > per_file_limit:
+            msg = '单文件超出限制（最大{}M),文件：{}，请升级套餐'.format(request.tracer.price_policy.per_file_size,item['name'])
+            return JsonResponse({'status': False,'error':msg})
+        total_size += item['size']
+
+    #总容量进行限制
+    if request.tracer.project.use_space + total_size > total_file_limit:
+        return JsonResponse({'status': True,'error':"容量超过限制，请升级套餐"})
+
+
+    data_dict = credential(request.tracer.project.bucket,request.tracer.project.region)
+    return JsonResponse({'status':True,'data':data_dict})
