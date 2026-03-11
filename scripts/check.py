@@ -14,7 +14,10 @@ config = CosConfig(Region=region, SecretId=secret_id, SecretKey=secret_key, Toke
 # 2.获取客户端对象
 client = CosS3Client(config)
 
-client.delete_object(
-        Bucket='s28-18309280693-1772976162271-1392471131',
-        Key='1773211295355_a1.png'
-    )
+# 创建桶
+response = client.head_object(
+    Bucket='s28-18309280693-1772976162271-1392471131',
+    Key='1773203756990_code.png',
+)
+
+print(response)

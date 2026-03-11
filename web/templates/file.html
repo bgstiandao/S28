@@ -35,6 +35,13 @@
             overflow: hidden;
         }
 
+        .upload-progress {
+            position: fixed;
+            right: 2px;
+            bottom: 2px;
+            width: 400px;
+        }
+
     </style>
 {% endblock %}
 
@@ -79,11 +86,11 @@
                     <th>操作</th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody id="rowList">
                 {% for item in file_object_list %}
                     <tr>
                         <td>
-                            {% if item.file_size == 1 %}
+                            {% if item.file_type == 1 %}
                                 <i class="fa fa-file" aria-hidden="true"></i>
                                 {{ item.name }}
                             {% else %}
@@ -95,7 +102,7 @@
 
                         </td>
                         <td>
-                            {% if item.file_size == 1 %}
+                            {% if item.file_type == 1 %}
                                 {{ item.file_size }}
                             {% else %}
                                 -
@@ -124,7 +131,6 @@
         </div>
 
     </div>
-
 
     <!-- Modal -->
     <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
@@ -173,6 +179,67 @@
             </div>
         </div>
     </div>
+
+    <div id="uploadProgress" class="upload-progress">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <i class="fa fa-cloud-upload" aria-hidden="true"></i>上传进度
+            </div>
+            <table class="table">
+                <tbody id="progressList">
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <div class="hide">
+        <table id="progressTemplate">
+            <tr>
+                <td>
+                    <div class="name"></div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
+                             aria-valuenow="0"
+                             aria-valuemin="0"
+                             aria-valuemax="100" style="width: 0;">
+                            0%
+
+                        </div>
+
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="hide">
+        <table id="rowTpl">
+            <tr>
+                <td>
+                    <i class="fa fa-file" aria-hidden="true"></i><span class="name"></span>
+                </td>
+                <td class="file_size"></td>
+                <td class="username"></td>
+                <td class="datetime"></td>
+                <td>
+                    <!--
+                    <a class="btn btn-default btn-xs download">
+                        <i class="fa fa-cloud-download"></i>
+                    </a>
+                    -->
+                    <a class="btn btn-danger btn-xs delete" data-toggle="modal" data-target="#alertModal">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </a>
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
 {% endblock %}
 
 
@@ -185,6 +252,8 @@
         var FOLDER_URL = '{% url 'file' project_id=request.tracer.project.id %}'
         var FILE_DELETE_URL = '{% url 'file_delete' project_id=request.tracer.project.id %}'
         var COS_CREDENTIAL = '{% url 'cos_credential' project_id=request.tracer.project.id %}'
+        var FILE_POST = '{% url 'file_post' project_id=request.tracer.project.id %}'
+        var CURRENT_FOLDER_ID = '{{ folder_object.id }}'
 
         /**可以把cos放在放在这里，但是要验证单文件大小的时候，就需要把cos放到函数里面
          var COS_OBJECT = new COS({
@@ -243,7 +312,7 @@
                                     StartTime: res.data.startTime,
                                     ExpiredTime: res.data.expiredTime,
                                 });
-                            }else{
+                            } else {
                                 alert(res.error);
                             }
 
@@ -256,20 +325,68 @@
                     // 上传文件
                     //COS_OBJECT.上传
                     var fileName = fileObject.name;
+                    var fileSize = fileObject.size;
+                    var key = (new Date()).getTime() + '_' +fileName;
+
+                    var tr = $('#progressTemplate').find('tr').clone();
+                    tr.find(".name").text(fileName);
+                    $('#progressList').append(tr);
+
                     // 上传文件(异步）
                     cos_credential.putObject({
                         Bucket: '{{ request.tracer.project.bucket }}',/*必须*/
                         Region: '{{ request.tracer.project.region }}',	/*存储桶所在地域，必须字段*/
-                        Key: fileName,			/*必须*/
+                        Key: key,			/*必须*/
                         Body: fileObject,	/*上传文件对象*/
                         onProgress: function (progressData) {
                             //进度条
-                            console.log("文件上传进度--->", fileName, JSON.stringify(progressData));
+                            //console.log("文件上传进度--->", fileName, JSON.stringify(progressData));
+                            percent = progressData.percent*100 + '%';
+                            tr.find('.progress-bar').text(percent);
+                            tr.find('.progress-bar').css('width',percent);
                         }
                     }, function (err, data) {
                         //是否上传cos成功?
                         //把上传成功的文件信息提交给django,django写入数据库
-                        console.log(err || data)
+                        console.log(err || data);
+                        if(data && data.statusCode === 200){
+                            //上传成功，将本次上传的文件提交到后台并写入数据
+                            //当前文件上传成功
+                            /*以前用这种方式，现在用下面的方式
+                             $.ajax({
+                                url:'',
+                                data:{},
+                                success:function (res){
+
+                                }
+                            })
+                             */
+                            $.post(FILE_POST,{
+                                name:fileName,
+                                file_size: fileSize,
+                                key:key,
+                                parent:CURRENT_FOLDER_ID,
+                                etag:data.ETag,
+                                file_path:data.Location,
+                            },function (res){
+                                //在数据库中写入成功，将已添加的数据在页面上动态展示
+                                var newTr = $('#rowTpl').find('tr').clone();
+                                newTr.find('.name').text(res.data.name);
+                                newTr.find('.file_size').text(res.data.file_size);
+                                newTr.find('.username').text(res.data.username);
+                                newTr.find('.datetime').text(res.data.datetime);
+                                newTr.find('.delete').attr('data-fid',res.data.id);
+                                $('#rowList').append(newTr);
+
+                                //自己的进度条删除
+                                tr.remove()
+
+                            })
+
+                        }else{
+                            tr.find('.progress-error').text('上传失败');
+                        }
+
                     })
                 })
 

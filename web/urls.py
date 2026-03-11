@@ -41,6 +41,7 @@ urlpatterns = [
         re_path(r'^file/$',file.file, name='file'),
         re_path(r'^file/delete/$',file.file_delete, name='file_delete'),
         re_path(r'^cos/credential/$', file.cos_credential, name='cos_credential'),
+        re_path(r'^file/post/$', file.file_post, name='file_post'),
 
         re_path(r'^setting/$',manage.setting, name='setting'),
 

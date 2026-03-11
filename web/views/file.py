@@ -1,11 +1,12 @@
 import json
 
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.forms import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
 
-from web.forms.file import FileModelForm
+from web.forms.file import FolderModelForm,FileModelForm
 from web import models
 
 from utils.tecent.cos import delete_file,delete_file_list,credential
@@ -39,11 +40,12 @@ def file(request,project_id):
             #根目录
             file_object_list = queryset.filter(parent__isnull=True).order_by('-file_type')
 
-        form = FileModelForm(request,parent_object)
+        form = FolderModelForm(request,parent_object)
         context = {
             'form': form,
             'file_object_list': file_object_list,
             'breadcrumb_list': breadcrumb_list,
+            'folder_object': parent_object,     #为前端和file_post函数提供参数
         }
         return render(request,'file.html',context)
 
@@ -55,9 +57,9 @@ def file(request,project_id):
         edit_object = models.FileRepository.objects.filter(id=int(fid), file_type=2,project=request.tracer.project).first()
 
     if edit_object:
-        form = FileModelForm(request, parent_object, request.POST,instance=edit_object)
+        form = FolderModelForm(request, parent_object, request.POST,instance=edit_object)
     else:
-        form = FileModelForm(request,parent_object,request.POST)
+        form = FolderModelForm(request,parent_object,request.POST)
 
     if form.is_valid():
         form.instance.project = request.tracer.project
@@ -78,8 +80,6 @@ def file_delete(request,project_id):
     #删除数据库中的 文件&文件夹 （级联删除）
     delete_object = models.FileRepository.objects.filter(id=fid,project=request.tracer.project).first()
     if delete_object.file_type == 1:
-        pass    #删除文件（数据库文件删除，cos文件删除，项目已使用空间容量还回去）
-
         #删除文件，将容量还给当前项目的已使用空间
         request.tracer.project.use_space -= delete_object.file_size
         request.tracer.project.save()
@@ -140,7 +140,6 @@ def cos_credential(request,project_id):
         #文件的字节大小 item["size"] = B
         #单文件限制的大小 M
         #超出限制
-        print(item['size'])
         if item['size'] > per_file_limit:
             msg = '单文件超出限制（最大{}M),文件：{}，请升级套餐'.format(request.tracer.price_policy.per_file_size,item['name'])
             return JsonResponse({'status': False,'error':msg})
@@ -153,3 +152,47 @@ def cos_credential(request,project_id):
 
     data_dict = credential(request.tracer.project.bucket,request.tracer.project.region)
     return JsonResponse({'status':True,'data':data_dict})
+
+@csrf_exempt
+def file_post(request,project_id):
+    """已上传成功的文件写入到数据库"""
+    """
+    name:fileName,
+    file_size: fileSize,
+    key:key,
+    parent:CURRENT_FOLDER_ID,
+    # etag:data.Etag,
+    file_path:data.Location,
+    """
+    # 根据key再去cos获取文件Etag和"d57c104a59998d2572ca3662a69e2221"
+
+    print(request.POST)
+    # 把获取的数据写入数据库即可
+    form = FileModelForm(request,request.POST)
+    if form.is_valid():
+
+        #通过ModelForm.save存储到数据库中的数据返回的instance对象，无法通过get_xx_display获取choice的中文
+        # form.instance.file_type = 1
+        # form.instance.update_user = request.tracer.user
+        # instance = form.save()    #添加成功之后，获取到新添加的那个对象（但是instance.get_file_type_display()获取不到中文)
+
+        # 校验通过：数据写入到数据库
+        data_dict = form.cleaned_data
+        data_dict.pop('etag')
+        data_dict.update({'project':request.tracer.project,'file_type':1,'update_user':request.tracer.user})
+        instance = models.FileRepository.objects.create(**data_dict)
+
+        #项目的已使用空间：更新(data_dict['file_size'])
+        request.tracer.project.use_space += data_dict['file_size']
+        request.tracer.project.save()
+
+        result = {
+            'id': instance.id,
+            'name': instance.name,
+            'file_size': instance.file_size,
+            'username': instance.update_user.username,
+            'datetime':instance.update_datetime.strftime('%Y年%m月%d日 %H:%M'),
+            'file_type': instance.get_file_type_display(),
+        }
+        return JsonResponse({'status':True,'data':result})
+    return JsonResponse({'status':False,'data':'文件错误'})

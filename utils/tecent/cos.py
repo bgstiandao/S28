@@ -67,16 +67,14 @@ def upload_file(bucket, region,file_object,key):
 
     return "https://{}.cos.{}.myqcloud.com/{}".format(bucket, region, key)
 
-
 def delete_file(bucket, region,key):
-    config = CosConfig(Region=region,SecretKey=settings.TENCENT_COS_ID, SecretId=settings.TENCENT_COS_KEY)
+    config = CosConfig(Region=region,SecretKey=settings.TENCENT_COS_KEY, SecretId=settings.TENCENT_COS_ID)
     client = CosS3Client(config)
 
     client.delete_object(
         Bucket=bucket,
         Key=key
     )
-
 
 def delete_file_list(bucket, region,key_list):
     config = CosConfig(Region=region,SecretKey=settings.TENCENT_COS_ID, SecretId=settings.TENCENT_COS_KEY)
@@ -91,6 +89,17 @@ def delete_file_list(bucket, region,key_list):
         Bucket=bucket,
         Delete=objects,
     )
+
+def check_file(bucket, region,key):
+    """检查etag是否正确"""
+    config = CosConfig(Region=region, SecretKey=settings.TENCENT_COS_ID, SecretId=settings.TENCENT_COS_KEY)
+    client = CosS3Client(config)
+
+    data = client.head_object(  #SDK的功能
+        Bucket=bucket,
+        Key=key
+    )
+    return data
 
 def credential(bucket, region):
     """获取cos上传临时凭证"""

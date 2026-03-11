@@ -1,9 +1,11 @@
 from django import forms
 from django.core.exceptions import ValidationError
+
 from web.forms.bootstrap import BootstrapForm
 from web import models
+from utils.tecent.cos import check_file
 
-class FileModelForm(BootstrapForm,forms.ModelForm):
+class FolderModelForm(BootstrapForm,forms.ModelForm):
     class Meta:
         model = models.FileRepository
         fields = ['name']
@@ -30,3 +32,44 @@ class FileModelForm(BootstrapForm,forms.ModelForm):
             raise ValidationError('文件夹已存在')
         return name
 
+
+class FileModelForm(forms.ModelForm):
+    etag = forms.CharField(label='Etag')
+    class Meta:
+        model = models.FileRepository
+        exclude = ['project','file_type','update_user','update_datetime']
+
+    def __init__(self,request, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+
+    def clean_file_path(self):
+        return 'https://{}'.format(self.cleaned_data['file_path'])
+
+
+    #如果不考虑校验etag等的数据的话，可以把这个clean方法去掉
+    """
+    def clean(self):
+    key = self.cleaned_data['key']
+    etag = self.cleaned_data['etag']
+    file_size = self.cleaned_data['file_size']
+    if not key or not etag:
+        return self.cleaned_data
+    #向cos校验文件是否合法
+    #SDK的功能
+    from qcloud_cos.cos_exception import CosServiceError
+    try:
+        result = check_file(self.request.tracer.project.bucket,self.request.tracer.project.region,key)
+        print(result)
+    except CosServiceError as e:
+        self.add_error('key','文件不存在')
+        return self.cleaned_data
+
+    cos_etag = result.get('ETag')
+    if etag != cos_etag:
+        self.add_error('etag','ETag错误')
+
+    cos_length = result.get('Content-Length')
+    if int(cos_length) != file_size:
+        self.add_error('size', '文件大小错误')
+    """

@@ -1,9 +1,10 @@
 from qcloud_cos import CosConfig
 from qcloud_cos import CosS3Client
 from django.conf import settings
+from S28 import local_settings
 
-secret_id = settings.TENCENT_COS_ID  # 用户的 SecretId
-secret_key = settings.TENCENT_COS_KEY  # 用户的 SecretKey
+secret_id = local_settings.TENCENT_COS_ID  # 用户的 SecretId
+secret_key = local_settings.TENCENT_COS_KEY  # 用户的 SecretKey
 region = 'ap-shanghai'  # 替换为用户的 region
 
 token = None  # 如果使用永久密钥不需要填入 token，如果使用临时密钥需要填入
