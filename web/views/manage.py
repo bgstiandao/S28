@@ -18,5 +18,4 @@ def file(request, project_id):
 
 
 
-def setting(request, project_id):
-    return render(request, 'setting.html')
+

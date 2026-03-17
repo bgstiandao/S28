@@ -1,10 +1,13 @@
 import json
+from xml.sax.saxutils import escape
 
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+import requests
+
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render,HttpResponse
 from django.forms import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 
 from web.forms.file import FolderModelForm,FileModelForm
 from web import models
@@ -192,7 +195,35 @@ def file_post(request,project_id):
             'file_size': instance.file_size,
             'username': instance.update_user.username,
             'datetime':instance.update_datetime.strftime('%Y年%m月%d日 %H:%M'),
-            'file_type': instance.get_file_type_display(),
+            'download_url':reverse('file_download',kwargs={'project_id':request.tracer.project.id,'file_id':instance.id}),
+            #'file_type': instance.get_file_type_display(),
         }
         return JsonResponse({'status':True,'data':result})
     return JsonResponse({'status':False,'data':'文件错误'})
+
+
+def file_download(request,project_id,file_id):
+    """下载文件"""
+    #文件内容
+    #响应头
+    # 打开文件，获取文件的内容;去COS获取文件内容
+    # with open('xxx.png', mode='rb') as f:
+    #     data = f.read()
+
+    file_object = models.FileRepository.objects.filter(id=file_id,project_id=project_id).first()
+    res = requests.get(file_object.file_path)
+    #data = res.content
+    #文件分块处理（适用于大文件）
+    data = res.iter_content()
+
+    # response = HttpResponse(data)
+    #设置content_type=application/octet-stream 用于提示下载框
+    response = HttpResponse(data,content_type='application/octet-stream')
+
+    # 设置响应头,下载
+    #response['Content-Disposition'] = 'attachment;filename={}'.format(file_object.name)
+    # 设置响应头：中文文件名转义
+    from django.utils.encoding import escape_uri_path
+    response['Content-Disposition'] = 'attachment;filename={}'.format(escape_uri_path(file_object.name))
+
+    return response

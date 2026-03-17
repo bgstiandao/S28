@@ -1,6 +1,6 @@
 
 from django.urls import path,re_path,include
-from web.views import account,home,project,manage,wiki,file
+from web.views import account,home,project,manage,wiki,file,setting
 
 urlpatterns = [
     path('register/', account.register, name='register'),   #'register'
@@ -42,9 +42,9 @@ urlpatterns = [
         re_path(r'^file/delete/$',file.file_delete, name='file_delete'),
         re_path(r'^cos/credential/$', file.cos_credential, name='cos_credential'),
         re_path(r'^file/post/$', file.file_post, name='file_post'),
-
-        re_path(r'^setting/$',manage.setting, name='setting'),
-
+        re_path(r'^file/download/(?P<file_id>\d+)$', file.file_download, name='file_download'),
+        re_path(r'^setting/$',setting.setting, name='setting'),
+        re_path(r'^setting/delete/$',setting.delete, name='setting_delete'),
     ])),
 
 
