@@ -1,17 +1,136 @@
-{% extends 'layout/manage.html'%}
+{% extends 'layout/manage.html' %}
 
 {% block title %}
 
 {% endblock %}
 
 {% block css %}
+    <style>
+        .issues-list .number {
+            width: 100px;
+            text-align: right;
+        }
 
+        .issues-list .number a {
+            font-weight: 500;
+            padding: 0 10px;
+        }
+
+        .issues-list .issue .tags {
+            padding: 10px 0;
+        }
+
+        .issues-list .issue .tags span {
+            margin-right: 20px;
+            display: inline-block;
+            font-size: 12px;
+        }
+
+        .issues-list .issue .tags .type {
+            color: white;
+            padding: 1px 5px;
+            border-radius: 5px;
+        }
+
+
+    </style>
 {% endblock %}
 
 
 
 {% block content %}
-	<h1>问题</h1>
+    <div class="container-fluid clearfix" style="padding: 20px 0;">
+        <div class="col-sm-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <i class="fa fa-search" aria-hidden="true"></i>筛选
+                </div>
+                <div class="panel-body">
+                    筛选选项
+                </div>
+            </div>
+
+        </div>
+        <div class="col-sm-9">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <i class="fa fa-quora" aria-hidden="true"></i>问题
+                </div>
+                <div class="panel-body">
+                    <a class="btn btn-success btn-sm" data-toggle="modal" data-target="#addModal">新建问题</a>
+                    <a class="btn btn-primary btn-sm" data-toggle="modal" data-target="#inviteModal">邀请成员</a>
+                </div>
+                <table class="table">
+                    <tbody class="issues-list">
+                    <tr>
+                        <td class="number">
+                            <i class="fa fa-circle text-danger"></i>
+                            <a target="_blank" href="">#010</a>
+                        </td>
+                        <td class="issue">
+                            <div>
+                                <a target="_blank" href="">去死</a>
+                            </div>
+                            <div class="tags">
+                                <span class="type" style="background-color: #56b8eb">
+                                    功能
+                                </span>
+                                <span>
+                                    <i class="fa fa-refresh" aria-hidden="true"></i>已解决
+                                </span>
+                                <span>
+                                    <i class="fa fa-user-o" aria-hidden="true"></i>wupeiqi
+                                </span>
+                                <span>
+                                    <i class="fa fa-clock-o" aria-hidden="true"></i>2020年3月30日 11：26
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <ul class="pagination" style="margin-top: 0;">
+                    {{ pager.page_html|safe }}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Large modal 新建模态对话框-->
+    <div id="addModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">新建问题</h4>
+                </div>
+                <div class="modal-body" style="padding-right: 40px;">
+                    <form  id="addForm" class="form-horizontal">
+                        <!--字段较多，并且格式不一致，最好不用for循环，手动生成-->
+                        {% for field in form %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}" class="col-sm-2 control-label">{{ field.label }}</label>
+                                <div class="col-sm-10">
+                                    {{ field }}
+                                    <span class="error-msg">{{ field.errors.0 }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">取 消</button>
+                    <button id="btnAdd" type="button" class="btn btn-primary">添 加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 

@@ -1,6 +1,6 @@
 
 from django.urls import path,re_path,include
-from web.views import account,home,project,manage,wiki,file,setting
+from web.views import account,home,project,manage,wiki,file,setting,issues
 
 urlpatterns = [
     path('register/', account.register, name='register'),   #'register'
@@ -23,7 +23,7 @@ urlpatterns = [
     #项目管理
     re_path(r'^manage/(?P<project_id>\d+)/',include([
         re_path(r'^dashboard/$',manage.dashboard, name='dashboard'),
-        re_path(r'^issues/$',manage.issues, name='issues'),
+
         re_path(r'^statistics/$',manage.statistics, name='statistics'),
 
         re_path(r'^wiki/$',wiki.wiki, name='wiki'),
@@ -33,9 +33,7 @@ urlpatterns = [
         # re_path(r'^wiki/detail/$', wiki.wiki_detail, name='wiki_detail'),不需要多写一个url，直接用wiki那个后面加参数
 
         re_path(r'^wiki/delete/(?P<wiki_id>\d+)/$',wiki.wiki_delete, name='wiki_delete'),
-
         re_path(r'^wiki/edit/(?P<wiki_id>\d+)/$', wiki.wiki_edit, name='wiki_edit'),
-
         re_path(r'^wiki/upload/$', wiki.wiki_upload, name='wiki_upload'),
 
         re_path(r'^file/$',file.file, name='file'),
@@ -45,6 +43,9 @@ urlpatterns = [
         re_path(r'^file/download/(?P<file_id>\d+)$', file.file_download, name='file_download'),
         re_path(r'^setting/$',setting.setting, name='setting'),
         re_path(r'^setting/delete/$',setting.delete, name='setting_delete'),
+
+        re_path(r'^issues/$',issues.issues, name='issues'),
+
     ])),
 
 
