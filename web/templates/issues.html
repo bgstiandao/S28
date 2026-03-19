@@ -1,10 +1,13 @@
 {% extends 'layout/manage.html' %}
-
+{% load static %}
 {% block title %}
 
 {% endblock %}
 
 {% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugin/bootstrap-datepicker/css/bootstrap-datepicker.min.css' %}">
+
     <style>
         .issues-list .number {
             width: 100px;
@@ -32,6 +35,9 @@
             border-radius: 5px;
         }
 
+        .pd {
+            padding: 0 !important;
+        }
 
     </style>
 {% endblock %}
@@ -109,17 +115,70 @@
                     <h4 class="modal-title">新建问题</h4>
                 </div>
                 <div class="modal-body" style="padding-right: 40px;">
-                    <form  id="addForm" class="form-horizontal">
+                    <form id="addForm" class="form-horizontal">
+                        {% csrf_token %}
                         <!--字段较多，并且格式不一致，最好不用for循环，手动生成-->
                         {% for field in form %}
-                            <div class="form-group">
-                                <label for="{{ field.id_for_label }}" class="col-sm-2 control-label">{{ field.label }}</label>
-                                <div class="col-sm-10">
-                                    {{ field }}
-                                    <span class="error-msg">{{ field.errors.0 }}</span>
+                            {% if field == form.issues_type or field == form.subject or field == form.module %}
+                                <div class="form-group">
+                                    <label for="{{ field.id_for_label }}"
+                                           class="col-md-2 control-label">{{ field.label }}</label>
+                                    <div class="col-md-10">
+                                        <div>
+                                            {{ field }}
+                                            <div class="error-msg"></div>
+                                        </div>
+                                        <div class="error-msg"></div>
+                                    </div>
                                 </div>
-                            </div>
+                            {% elif field == form.desc %}
+                                <div class="form-group">
+                                    <label for="{{ field.id_for_label }}"
+                                           class="col-md-2 control-label">{{ field.label }}</label>
+                                    <div class="col-md-10">
+                                        <div>
+                                            <div id="editor">
+                                                {{ field }}
+                                            </div>
+                                            <div class="error-msg"></div>
+                                        </div>
+                                        <div class="error-msg"></div>
+                                    </div>
+                                </div>
+                            {% endif %}
                         {% endfor %}
+
+                        <div class="form-group clearfix">
+                            {% for item in form %}
+                                {% if item != form.issues_type and item != form.subject and item != form.module and item != form.desc %}
+                                    {% if item != form.start_date and item != form.end_date %}
+                                        <div class="col-md-6 pd-0">
+                                            <label for="{{ item.id_for_label }}"
+                                                   class="col-md-4 control-label">{{ item.label }}</label>
+                                            <div class="col-md-8 clearfix">
+                                                {{ item }}
+                                                <div class="error-msg"></div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="col-md-6 pd-0">
+                                            <label for="{{ item.id_for_label }}"
+                                                   class="col-md-4 control-label">{{ item.label }}</label>
+                                            <div class="col-md-8 clearfix">
+                                                <div class="input-group">
+                                                <span class="input-group-addon" id="sizing-addon2">
+                                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                </span>
+                                                    {{ item }}
+                                                </div>
+                                                <span class="error-msg"></span>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     </form>
 
                 </div>
@@ -137,5 +196,48 @@
 
 
 {% block js %}
+    <script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
+    <script src="{% static 'plugin/bootstrap-datepicker/js/bootstrap-datepicker.min.js' %}"></script>
+    <script src="{% static 'plugin/bootstrap-datepicker/locales/bootstrap-datepicker.zh-CN.min.js' %}"></script>
 
+    <script>
+        var WIKI_UPLOAD_URL = "{% url 'wiki_upload' project_id=request.tracer.project.id %}"
+
+        $(function () {
+            bindBootStrapShownEvent();
+            initDatePicker();
+        });
+
+        function bindBootStrapShownEvent() {
+            $('#addModal').on('shown.bs.modal', function (event) {
+                //对话框弹出时，内容触发
+                initEditMd();
+            })
+        }
+
+        /*
+         添加对话框：初始化时间选择
+         */
+        function initDatePicker(){
+            $('#id_start_date,#id_end_date').datepicker({
+                format:'yyyy-mm-dd',
+                startDate:'0',
+                language:'zh-CN',
+                autoclose:true
+            })
+        }
+        /*
+        初始化markdown编辑器（textarea转换为编辑器）
+        */
+        function initEditMd() {
+            editormd('editor', {
+                placeholder: '请输入内容',
+                height: 300,
+                path: "{% static 'plugin/editor-md/lib/' %}",   /*内部资源依赖的路径*/
+                imageUpload: true,
+                imageFormats: ['jpg', 'jpeg', 'png', 'gif'],
+                imageUploadURL: WIKI_UPLOAD_URL,
+            })
+        }
+    </script>
 {% endblock %}
