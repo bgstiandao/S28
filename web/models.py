@@ -63,7 +63,7 @@ class Project(models.Model):
         (7,'#ffd700'),
     ]
     name = models.CharField(verbose_name='项目名',max_length=32)
-    color = models.SmallIntegerField(verbose_name='颜色',choices=COLOR_CHOICES,default=11)
+    color = models.SmallIntegerField(verbose_name='颜色',choices=COLOR_CHOICES,default=1)
     desc = models.CharField(verbose_name='项目描述',max_length=255,null=True,blank=True)
     use_space = models.BigIntegerField(verbose_name='项目已使用空间',default=0,help_text='字节')
     star = models.BooleanField(verbose_name='星标',default=False)
