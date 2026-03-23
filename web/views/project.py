@@ -55,14 +55,24 @@ def project_list(request):
         bucket = "{}-{}-{}-1392471131".format(name,request.tracer.user.mobile_phone, str(int(time.time()*1000)))
         region = "ap-shanghai"
         create_bucket(bucket,region)
+
+        #2.创建项目
         #把桶和区域写入到数据库
         form.instance.bucket = bucket
         form.instance.region = region
 
         # 验证通过：项目名、颜色、描述 + creator 谁创建的项目？
         form.instance.creator = request.tracer.user
-        # 创建项目
-        form.save()
+        instance = form.save()
+
+        #3.项目初始化问题类型
+        issues_type_object_list = []
+        for item in models.IssuesType.PROJECT_INIT_LIST:#['任务','功能','Bug']
+            issues_type_object_list.append(models.IssuesType(project=instance,title=item))
+        #bulk_create批量创建
+        models.IssuesType.objects.bulk_create(issues_type_object_list)
+
+
         return JsonResponse({'status': True})
 
     return JsonResponse({'status': False, 'error': form.errors})

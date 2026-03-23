@@ -126,7 +126,9 @@
                                            class="col-md-2 control-label">{{ field.label }}</label>
                                     <div class="col-md-10">
                                         <div>
-                                            {{ field }}
+                                            <div>
+                                                {{ field }}
+                                            </div>
                                             <div class="error-msg"></div>
                                         </div>
                                         <div class="error-msg"></div>
@@ -186,7 +188,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-dismiss="modal">取 消</button>
-                    <button id="btnAdd" type="button" class="btn btn-primary">添 加</button>
+                    <button id="btnAddSubmit" type="button" class="btn btn-primary">添 加</button>
                 </div>
             </div>
         </div>
@@ -206,10 +208,13 @@
 
     <script>
         var WIKI_UPLOAD_URL = "{% url 'wiki_upload' project_id=request.tracer.project.id %}"
+        var POST_ISSUES = "{% url 'issues' project_id=request.tracer.project.id %}"
+
 
         $(function () {
             bindBootStrapShownEvent();
             initDatePicker();
+            bindAddSubmit();
         });
 
         function bindBootStrapShownEvent() {
@@ -243,6 +248,30 @@
                 imageFormats: ['jpg', 'jpeg', 'png', 'gif'],
                 imageUploadURL: WIKI_UPLOAD_URL,
             })
+        }
+
+
+        function bindAddSubmit() {
+            $('#btnAddSubmit').click(function () {
+                $.ajax({
+                    url: POST_ISSUES,
+                    type: 'POST',
+                    data: $('#addForm').serialize(),
+                    dataType: 'JSON',
+                    success: function (res) {
+                        if (res.status) {
+                            location.href = location.href;
+                        } else {
+                            //错误信息
+                            $.each(res.error, function (k, v) {
+                                $('#id_'+k).parent().next('.error-msg').text(v[0]);
+
+                            })
+
+                        }
+                    }
+                })
+            });
         }
     </script>
 {% endblock %}
