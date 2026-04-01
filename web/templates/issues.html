@@ -1,5 +1,7 @@
 {% extends 'layout/manage.html' %}
 {% load static %}
+{% load issues %}
+
 {% block title %}
 
 {% endblock %}
@@ -34,6 +36,11 @@
             color: white;
             padding: 1px 5px;
             border-radius: 5px;
+            background-color: #dddddd;
+        }
+
+        .editormd {
+            margin-bottom: 0;
         }
 
         .pd {
@@ -69,37 +76,60 @@
                 </div>
                 <table class="table">
                     <tbody class="issues-list">
-                    <tr>
-                        <td class="number">
-                            <i class="fa fa-circle text-danger"></i>
-                            <a target="_blank" href="">#010</a>
-                        </td>
-                        <td class="issue">
-                            <div>
-                                <a target="_blank" href="">去死</a>
-                            </div>
-                            <div class="tags">
-                                <span class="type" style="background-color: #56b8eb">
-                                    功能
-                                </span>
-                                <span>
-                                    <i class="fa fa-refresh" aria-hidden="true"></i>已解决
-                                </span>
-                                <span>
-                                    <i class="fa fa-user-o" aria-hidden="true"></i>wupeiqi
-                                </span>
-                                <span>
-                                    <i class="fa fa-clock-o" aria-hidden="true"></i>2020年3月30日 11：26
-                                </span>
-                            </div>
-                        </td>
-                    </tr>
+                    {% for item in issues_object_list %}
+                        <tr>
+                            <td class="number">
+                                <i class="fa fa-circle text-{{ item.priority }}"></i>
+                                <a target="_blank"
+                                   href="{% url 'issues_detail' project_id=request.tracer.project.id issues_id=item.id %}">{% string_just item.id %}</a>
+                            </td>
+                            <td class="issue">
+                                <div>
+                                    <a target="_blank"
+                                       href="{% url 'issues_detail' project_id=request.tracer.project.id issues_id=item.id %}">{{ item.subject }}</a>
+                                </div>
+                                <div class="tags">
+                                    <span class="type">
+                                        {{ item.issues_type }}
+                                    </span>
+                                    <span>
+                                    <i class="fa fa-refresh" aria-hidden="true"></i>
+                                        {{ item.get_status_display }}
+                                    </span>
+                                    <span>
+                                    <i class="fa fa-user-o" aria-hidden="true"></i>
+                                        {{ item.creator }}
+                                    </span>
+
+                                    {% if item.assign %}
+                                        <span>
+                                    <i class="fa fa-hand-o-right" aria-hidden="true"></i>
+                                        {{ item.assign.username }}
+                                    </span>
+                                    {% endif %}
+
+                                    {% if item.end_date %}
+                                        <span>
+                                    <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                        {{ item.end_date }} 截止
+                                    </span>
+                                    {% endif %}
+                                    <span>
+                                    <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                        {{ item.lastest_update_datetime }} 更新
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+
                     </tbody>
                 </table>
+
             </div>
             <div>
                 <ul class="pagination" style="margin-top: 0;">
-                    {{ pager.page_html|safe }}
+                    {{ page_string }}
                 </ul>
             </div>
         </div>
@@ -253,6 +283,7 @@
 
         function bindAddSubmit() {
             $('#btnAddSubmit').click(function () {
+                $('#addForm').find('.error-msg').empty();
                 $.ajax({
                     url: POST_ISSUES,
                     type: 'POST',
@@ -264,7 +295,7 @@
                         } else {
                             //错误信息
                             $.each(res.error, function (k, v) {
-                                $('#id_'+k).parent().next('.error-msg').text(v[0]);
+                                $('#id_' + k).parent().next('.error-msg').text(v[0]);
 
                             })
 

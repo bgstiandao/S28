@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import render,redirect
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from web.forms.wiki import WikiModelForm
 from web import models
@@ -98,6 +99,7 @@ def wiki_edit(request, project_id,wiki_id):
         return redirect(preview_url)
     return render(request, 'wiki_form.html', {'form': form})
 
+@xframe_options_sameorigin
 @csrf_exempt
 def wiki_upload(request, project_id):
     """markdown插件上传图片"""

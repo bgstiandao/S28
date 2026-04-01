@@ -125,7 +125,7 @@ class Issues(models.Model):
     """问题"""
     project = models.ForeignKey(verbose_name='项目',to='Project',on_delete=models.CASCADE)
     issues_type = models.ForeignKey(verbose_name='问题类型',to='IssuesType',on_delete=models.CASCADE)
-    module = models.ForeignKey(verbose_name='模块',to='Module',on_delete=models.CASCADE)
+    module = models.ForeignKey(verbose_name='模块',to='Module',on_delete=models.CASCADE,null=True,blank=True)
     subject = models.CharField(verbose_name='主题',max_length=80)
     desc = models.TextField(verbose_name='问题描述')
     priority_choices = (
@@ -185,3 +185,18 @@ class IssuesType(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class IssuesReply(models.Model):
+    """问题回复"""
+    reply_type_choices = (
+        (1, "修改记录"),
+        (2, "回复")
+    )
+    reply_type = models.IntegerField(verbose_name='类型',choices=reply_type_choices,default=1)
+    issues = models.ForeignKey(verbose_name='问题',to='Issues',on_delete=models.CASCADE)
+    content = models.TextField(verbose_name='描述')
+    creator = models.ForeignKey(verbose_name='创建者',to='UserInfo',related_name='create_reply',on_delete=models.CASCADE)
+    create_datetime = models.DateTimeField(verbose_name='创建时间',auto_now_add=True)
+
+    reply = models.ForeignKey(verbose_name='回复',to='self',null=True,blank=True,on_delete=models.CASCADE)
