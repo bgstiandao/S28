@@ -76,71 +76,72 @@
                     </div>
                 </div>
                 <div class="panel-body">
-                    <form id="editForm" class="form-horizontal" method="post"></form>
-                    {% csrf_token %}
-                    {% for field in form %}
-                        {% if field == form.issues_type or field == form.subject or field == form.module %}
-                            <div class="form-group">
-                                <label for="{{ field.id_for_label }}"
-                                       class="col-md-2 control-label">{{ field.label }}</label>
-                                <div class="col-md-10">
-                                    <div>
+                    <form id="editForm" class="form-horizontal" method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            {% if field == form.issues_type or field == form.subject or field == form.module %}
+                                <div class="form-group">
+                                    <label for="{{ field.id_for_label }}"
+                                           class="col-md-2 control-label">{{ field.label }}</label>
+                                    <div class="col-md-10">
                                         <div>
-                                            {{ field }}
-                                        </div>
-                                        <div class="error-msg"></div>
-                                    </div>
-                                    <div class="error-msg"></div>
-                                </div>
-                            </div>
-                        {% elif field == form.desc %}
-                            <div class="form-group">
-                                <label for="{{ field.id_for_label }}"
-                                       class="col-md-2 control-label">{{ field.label }}</label>
-                                <div class="col-md-10">
-                                    <div>
-                                        <div id="editor">
-                                            {{ field }}
-                                        </div>
-                                        <div class="error-msg"></div>
-                                    </div>
-                                    <div class="error-msg"></div>
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-
-                    <div class="form-group clearfix">
-                        {% for item in form %}
-                            {% if item != form.issues_type and item != form.subject and item != form.module and item != form.desc %}
-                                {% if item != form.start_date and item != form.end_date %}
-                                    <div class="col-md-6 pd-0">
-                                        <label for="{{ item.id_for_label }}"
-                                               class="col-md-4 control-label">{{ item.label }}</label>
-                                        <div class="col-md-8 clearfix">
-                                            {{ item }}
+                                            <div>
+                                                {{ field }}
+                                            </div>
                                             <div class="error-msg"></div>
                                         </div>
+                                        <div class="error-msg"></div>
                                     </div>
-                                {% else %}
-                                    <div class="col-md-6 pd-0">
-                                        <label for="{{ item.id_for_label }}"
-                                               class="col-md-4 control-label">{{ item.label }}</label>
-                                        <div class="col-md-8 clearfix">
-                                            <div class="input-group">
+                                </div>
+                            {% elif field == form.desc %}
+                                <div class="form-group">
+                                    <label for="{{ field.id_for_label }}"
+                                           class="col-md-2 control-label">{{ field.label }}</label>
+                                    <div class="col-md-10">
+                                        <div>
+                                            <div id="editor">
+                                                {{ field }}
+                                            </div>
+                                            <div class="error-msg"></div>
+                                        </div>
+                                        <div class="error-msg"></div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <div class="form-group clearfix">
+                            {% for item in form %}
+                                {% if item != form.issues_type and item != form.subject and item != form.module and item != form.desc %}
+                                    {% if item != form.start_date and item != form.end_date %}
+                                        <div class="col-md-6 pd-0">
+                                            <label for="{{ item.id_for_label }}"
+                                                   class="col-md-4 control-label">{{ item.label }}</label>
+                                            <div class="col-md-8 clearfix">
+                                                {{ item }}
+                                                <div class="error-msg"></div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="col-md-6 pd-0">
+                                            <label for="{{ item.id_for_label }}"
+                                                   class="col-md-4 control-label">{{ item.label }}</label>
+                                            <div class="col-md-8 clearfix">
+                                                <div class="input-group">
                                                 <span class="input-group-addon" id="sizing-addon2">
                                                     <i class="fa fa-calendar" aria-hidden="true"></i>
                                                 </span>
-                                                {{ item }}
+                                                    {{ item }}
+                                                </div>
+                                                <span class="error-msg"></span>
                                             </div>
-                                            <span class="error-msg"></span>
                                         </div>
-                                    </div>
-                                {% endif %}
+                                    {% endif %}
 
-                            {% endif %}
-                        {% endfor %}
-                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -216,6 +217,7 @@
     <script>
         var WIKI_UPLOAD_URL = "{% url 'wiki_upload' project_id=request.tracer.project.id %}"
         var ISSUES_RECORD_API = "{% url 'issues_record' project_id=request.tracer.project.id issues_id=issues_object.id %}"
+        var EDITOR
 
         $(function () {
             initDatePicker();
@@ -224,6 +226,7 @@
             bindReply();
             bindCancelReplyUser();
             bindSubmit();
+            bindChangeIssues();
         });
 
 
@@ -243,7 +246,7 @@
 初始化markdown编辑器（textarea转换为编辑器）
 */
         function initEditMd() {
-            editormd('editor', {
+            EDITOR = editormd('editor', {
                 placeholder: '请输入内容',
                 height: 300,
                 path: "{% static 'plugin/editor-md/lib/' %}",   /*内部资源依赖的路径*/
@@ -262,10 +265,6 @@
                     this.previewing();
                 },
             })
-        }
-
-        function saveDesc() {
-            alert('666');
         }
 
         /*
@@ -360,6 +359,21 @@
                 })
             })
 
+        }
+
+        function bindChangeIssues() {
+            $('#editForm').find('.form-control').change(function () {
+                //内容变更
+                var postDict = {name: $(this).attr('name'), value: $(this).val()};
+                console.log(postDict);
+
+
+            });
+        }
+
+        function saveDesc() {
+            var postDict = {name: 'desc', value: EDITOR.getValue()};
+            console.log(postDict);
         }
     </script>
 {% endblock %}
