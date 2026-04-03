@@ -218,6 +218,7 @@
         var WIKI_UPLOAD_URL = "{% url 'wiki_upload' project_id=request.tracer.project.id %}"
         var ISSUES_RECORD_API = "{% url 'issues_record' project_id=request.tracer.project.id issues_id=issues_object.id %}"
         var EDITOR
+        var ISSUES_CHANGE_API = "{% url 'issues_change' project_id=request.tracer.project.id issues_id=issues_object.id %}"
 
         $(function () {
             initDatePicker();
@@ -243,8 +244,8 @@
         }
 
         /*
-初始化markdown编辑器（textarea转换为编辑器）
-*/
+        初始化markdown编辑器（textarea转换为编辑器）
+        */
         function initEditMd() {
             EDITOR = editormd('editor', {
                 placeholder: '请输入内容',
@@ -365,15 +366,35 @@
             $('#editForm').find('.form-control').change(function () {
                 //内容变更
                 var postDict = {name: $(this).attr('name'), value: $(this).val()};
-                console.log(postDict);
-
-
+                postAjaxData(postDict);
             });
         }
 
         function saveDesc() {
             var postDict = {name: 'desc', value: EDITOR.getValue()};
-            console.log(postDict);
+            postAjaxData(postDict);
+        }
+
+        function postAjaxData(postDict){
+            $('#id_'+postDict.name).parent().next('.error-msg').text('');
+
+            $.ajax({
+                url:ISSUES_CHANGE_API,
+                type:'POST',
+                header:{
+                    'Content-Type':'application/json;charset=utf-8'
+                },
+                data:JSON.stringify(postDict),
+                dataType:'JSON',
+                success:function (res){
+                    if(res.status){
+                        createRecordNode(res.data);
+                    }else{
+                        $('#id_'+postDict.name).parent().next('.error-msg').text(res.error);
+                    }
+                }
+            })
+
         }
     </script>
 {% endblock %}
