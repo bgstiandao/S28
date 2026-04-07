@@ -44,6 +44,27 @@ class CheckFilter(object):
             html = "<a class='cell' href='{url}'><input type='checkbox' {ck} /><label>{text}</label></a>".format(url=url,ck=ck,text=text)
             yield mark_safe(html)
 
+class SelectFilter(object):
+    def __init__(self,name,data_list,request):
+        self.name = name
+        self.data_list = data_list
+        self.request = request
+
+    def __iter__(self):
+        yield mark_safe("<select class='select2' multiple='multiple' style='width:100%;'>")
+        for item in self.data_list:
+            key = str(item[0])
+            text = item[1]
+
+            selected = ''
+            value_list = self.request.GET.getlist(self.name)
+            if key in value_list:
+                selected = 'selected'
+
+            html = "<option {selected}>{text}</option>".format(selected=selected,text=text)
+            yield mark_safe(html)
+
+        yield mark_safe("</select>")
 
 def issues(request, project_id):
     if request.method == 'GET':
@@ -67,18 +88,36 @@ def issues(request, project_id):
         page_obj = Pagination(request, queryset)
 
         form = IssuesModelForm(request)
+
+        project_issues_type = models.IssuesType.objects.filter(project_id=project_id).values_list('id','title')
+
+        project_total_user = [[request.tracer.project.creator_id,request.tracer.project.creator.username],]
+        join_user = models.ProjectUser.objects.filter(project_id=project_id).values_list('user_id','user__username')
+        project_total_user.extend(join_user)
+
         context = {
             'form' : form,
             'issues_object_list': page_obj.page_queryset,  # 分完页的数据
             'page_string': page_obj.html(),  # 页码
-            'status_filter':CheckFilter('status',models.Issues.status_choices,request),
-            'priority_filter': CheckFilter('priority', models.Issues.priority_choices, request),
+            'filter_list':[
+                {'title':'问题类型','filter':CheckFilter('issues_type',project_issues_type , request)},
+                {'title': '状态', 'filter':CheckFilter('status',models.Issues.status_choices,request)},
+                {'title': '优先级', 'filter': CheckFilter('priority', models.Issues.priority_choices, request)},
+                {'title': '指派者', 'filter': SelectFilter('assign', project_total_user, request)},
+
+            ],
+
+            #弄到一个列表中，就可以在前端使用双重循环了
+            #'status_filter':CheckFilter('status',models.Issues.status_choices,request),
+            #'priority_filter': CheckFilter('priority', models.Issues.priority_choices, request),
+            #'issues_type_filter': CheckFilter('issues_type',project_issues_type , request),
+
         }
 
 
         return render(request,'issues.html',context)
 
-    print(request.POST)
+
     form = IssuesModelForm(request,data=request.POST)
     if form.is_valid():
         #添加问题
