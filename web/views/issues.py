@@ -60,8 +60,23 @@ class SelectFilter(object):
             value_list = self.request.GET.getlist(self.name)
             if key in value_list:
                 selected = 'selected'
+                value_list.remove(key)
+            else:
+                value_list.append(key)
 
-            html = "<option {selected}>{text}</option>".format(selected=selected,text=text)
+            query_dict = self.request.GET.copy()
+            query_dict.__mutable = True
+            query_dict.setlist(self.name, value_list)  # {'status':[1,2,3],'age':19}
+            if 'page' in query_dict:
+                query_dict.pop('page')
+
+            param_url = query_dict.urlencode()
+            if param_url:
+                url = "{}?{}".format(self.request.path_info, param_url)  # status=1&status=2&status=3&age=19
+            else:
+                url = self.request.path_info
+
+            html = "<option value='{url}' {selected}>{text}</option>".format(url=url,selected=selected,text=text)
             yield mark_safe(html)
 
         yield mark_safe("</select>")
@@ -70,7 +85,7 @@ def issues(request, project_id):
     if request.method == 'GET':
         # 根据URL做筛选，筛选条件（根据用户通过GET传来的参数实现）
         # ?status =1 & status=2 & issues_type=1
-        allow_filter_name = ['issues_type','status','priority']
+        allow_filter_name = ['issues_type','status','priority','assign','attention']
         condition = {}
         for name in allow_filter_name:
             value_list = request.GET.getlist(name)   #[1,2]
@@ -104,7 +119,7 @@ def issues(request, project_id):
                 {'title': '状态', 'filter':CheckFilter('status',models.Issues.status_choices,request)},
                 {'title': '优先级', 'filter': CheckFilter('priority', models.Issues.priority_choices, request)},
                 {'title': '指派者', 'filter': SelectFilter('assign', project_total_user, request)},
-
+                {'title': '关注者', 'filter': SelectFilter('attention', project_total_user, request)},
             ],
 
             #弄到一个列表中，就可以在前端使用双重循环了
