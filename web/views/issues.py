@@ -1,12 +1,21 @@
+import json
+import datetime
+
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.safestring import mark_safe
-
-from web.forms.issues import IssuesModelForm,IssuesReplyModelForm
-from utils.pagination import Pagination
+from django.urls import reverse
+from web.forms.issues import IssuesModelForm,IssuesReplyModelForm,InviteModelForm
 from web import models
-import json
+from utils.encrypt import uid
+from utils.pagination import Pagination
+
+
+
+
+from web.models import ProjectInvite
+
 
 class CheckFilter(object):
     def __init__(self,name,data_list,request):
@@ -110,8 +119,11 @@ def issues(request, project_id):
         join_user = models.ProjectUser.objects.filter(project_id=project_id).values_list('user_id','user__username')
         project_total_user.extend(join_user)
 
+        invite_form = InviteModelForm()
+
         context = {
             'form' : form,
+            'invite_form':invite_form,
             'issues_object_list': page_obj.page_queryset,  # 分完页的数据
             'page_string': page_obj.html(),  # 页码
             'filter_list':[
@@ -321,3 +333,71 @@ def issues_change(request, project_id,issues_id):
         return JsonResponse({'status': True,'data': create_reply_record(change_record)})
 
     return JsonResponse({'status':False,'error':'滚'})
+
+
+def invite_url(request,project_id):
+    """生成邀请码"""
+    form = InviteModelForm(data=request.POST)
+    if form.is_valid():
+        """
+        1.创建随机的邀请码
+        2.验证码保存到数据库
+        3.限制：只有创建者才能邀请
+        """
+        if request.tracer.user != request.tracer.project.creator:
+            form.add_error('period','无权创建邀请码')
+            return JsonResponse({'status': False, 'error': form.errors})
+        random_invite_code = uid(request.tracer.user.mobile_phone)
+        form.instance.project = request.tracer.project
+        form.instance.code = random_invite_code
+        form.instance.creator = request.tracer.user
+        form.save()
+
+        #将邀请码返回到前端，前端页面展示出来。
+        url  = '{scheme}://{host}{path}'.format(
+            scheme=request.scheme,      #https/http
+            host=request.get_host(),    #域名：主机+端口
+            path=reverse('invite_join',kwargs={'code':random_invite_code})
+        )
+        return JsonResponse({'status': True,'data':url})
+
+    return JsonResponse({'status':False,'error':form.errors})
+
+def invite_join(request,code):
+    """访问邀请码"""
+    invite_object = models.ProjectInvite.objects.filter(code=code).first()
+
+    if not invite_object:
+        return render(request,'invite_join.html',{'error':'邀请码不存在'})
+
+    if invite_object.project.creator == request.tracer.user:
+        return render(request, 'invite_join.html', {'error': '创建者无需再加入项目'})
+
+    exists = models.ProjectInvite.objects.filter(project=invite_object.project,user=request.tracer.user).exists()
+    if exists:
+        return render(request, 'invite_join.html', {'error': '已加入项目无需再加入'})
+
+    #最多允许的成员
+    max_member = request.tracer.price_policy.project_member
+
+    #目前所有成员(创建者&参与者）
+    current_member = models.ProjectUser.objects.filter(project=invite_object.project).first()
+    current_member += 1
+    if current_member >= max_member:
+        return render(request, 'invite_join.html', {'error': '项目成员超限，请升级套餐'})
+
+    #邀请码是否过期？
+    current_datetime = datetime.datetime.now()
+    limit_datetime = invite_object.create_datetime +datetime.timedelta(minutes=invite_object.period)
+    if current_datetime > limit_datetime:
+        return render(request, 'invite_join.html', {'error': '验证码已过期'})
+
+    #数量限制
+    if invite_object.count:
+        if invite_object.use_count >= invite_object.count:
+            return render(request, 'invite_join.html', {'error': '验证码数量已使用完'})
+        invite_object.use_count += 1
+        invite_object.save()
+
+    models.ProjectUser.objects.create(project=invite_object.project,user=request.tracer.user)
+    return render(request,'invite_join.html',{'project':invite_object.project})
