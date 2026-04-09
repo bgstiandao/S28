@@ -50,6 +50,7 @@ urlpatterns = [
         re_path(r'^issues/invite/url/$', issues.invite_url, name='invite_url'),
 
         re_path(r'^dashboard/$', dashboard.dashboard, name='dashboard'),
+        re_path(r'^dashboard/issues/chart/$', dashboard.issues_chart, name='issues_chart'),
 
     ])),
 
