@@ -1,5 +1,5 @@
 from django.urls import path, re_path, include
-from web.views import account, home, project, manage, wiki, file, setting, issues,dashboard
+from web.views import account, home, project, statistics, wiki, file, setting, issues,dashboard
 
 urlpatterns = [
     path('register/', account.register, name='register'),  # 'register'
@@ -21,8 +21,6 @@ urlpatterns = [
 
     # 项目管理
     re_path(r'^manage/(?P<project_id>\d+)/', include([
-
-        re_path(r'^statistics/$', manage.statistics, name='statistics'),
 
         re_path(r'^wiki/$', wiki.wiki, name='wiki'),
         re_path(r'^wiki/add/$', wiki.wiki_add, name='wiki_add'),
@@ -52,6 +50,7 @@ urlpatterns = [
         re_path(r'^dashboard/$', dashboard.dashboard, name='dashboard'),
         re_path(r'^dashboard/issues/chart/$', dashboard.issues_chart, name='issues_chart'),
 
+        re_path(r'^statistics/$', statistics.statistics, name='statistics'),
     ])),
 
     # 项目邀请，（被邀请人还不是成员，所以不能在项目管理里面写，要单独拿出来）
