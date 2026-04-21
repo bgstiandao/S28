@@ -51,6 +51,9 @@ urlpatterns = [
         re_path(r'^dashboard/issues/chart/$', dashboard.issues_chart, name='issues_chart'),
 
         re_path(r'^statistics/$', statistics.statistics, name='statistics'),
+        re_path(r'^statistics/priority/$', statistics.statistics_priority, name='statistics_priority'),
+        re_path(r'^statistics/project/user/$', statistics.statistics_project_user, name='statistics_project_user'),
+
     ])),
 
     # 项目邀请，（被邀请人还不是成员，所以不能在项目管理里面写，要单独拿出来）
